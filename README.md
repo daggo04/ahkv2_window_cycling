@@ -12,12 +12,12 @@ A fast and reliable AutoHotkey v2 script for launching and cycling through appli
 
 ## Default Hotkeys
 
-- **Left Alt + 1** - Windows Terminal
-- **Left Alt + 3** - Vivaldi Browser
-- **Left Alt + 5** - Microsoft Outlook
-- **Left Alt + 6** - Microsoft Teams
-- **Left Alt + 7** - Obsidian
-- **Left Alt + 8** - ProtonMail
+- **LAlt + 1** - Windows Terminal
+- **LAlt + 3** - Vivaldi Browser
+- **LAlt + 5** - Microsoft Outlook
+- **LAlt + 6** - Microsoft Teams
+- **LAlt + 7** - Obsidian
+- **LAlt + 8** - ProtonMail
 
 ## How It Works
 
@@ -33,16 +33,18 @@ A fast and reliable AutoHotkey v2 script for launching and cycling through appli
 
 ## Customization
 
-Edit the hotkey definitions at the bottom of the script to match your preferred applications:
+Edit the hotkey definitions at the bottom of the script to match your preferred applications and hotkeys:
 
 ```autohotkey
-LAlt & 1::LaunchOrCycle("your-process.exe", "launch-command", "unique-key")
+YourHotkey::LaunchOrCycle("your-process.exe", "launch-command", "appKey")
 ```
 
 Parameters:
 - `processName` - The executable name to detect windows
-- `launchCommand` - Command to launch the application
+- `launchCommand` - Command to launch the application  
 - `appKey` - Unique identifier for the application
+
+The hotkey can be any combination supported by AutoHotkey (e.g., `Ctrl & J`, `Win & 1`, `F1`, etc.).
 
 ## Installation
 
@@ -53,7 +55,7 @@ Parameters:
 
 ## Technical Details
 
-- Uses left Alt specifically to avoid conflicts with AltGr symbol typing
+- Default hotkeys use LAlt to avoid conflicts with AltGr symbol typing
 - Implements timer-based window polling for reliable launch focus
 - Filters out DWM-cloaked windows using Windows API calls
 - Maintains per-application state for efficient window management
