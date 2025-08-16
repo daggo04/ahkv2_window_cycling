@@ -70,8 +70,25 @@ LaunchOrCycle(processName, launchCommand, appKey) {
         return
     }
     
-    ; Cycle through the snapshot
-    appData.lastActivated := (appData.lastActivated >= appData.windowSnapshot.Length) ? 1 : appData.lastActivated + 1
+    ; Smart cycling: if current app is active, jump to next window
+    activeWindow := WinGetID("A")
+    currentIndex := 0
+    
+    ; Find if active window is in our snapshot
+    for i, hwnd in appData.windowSnapshot {
+        if (hwnd = activeWindow) {
+            currentIndex := i
+            break
+        }
+    }
+    
+    ; If active window is in snapshot, jump to next; otherwise use lastActivated
+    if (currentIndex > 0) {
+        appData.lastActivated := (currentIndex >= appData.windowSnapshot.Length) ? 1 : currentIndex + 1
+    } else {
+        appData.lastActivated := (appData.lastActivated >= appData.windowSnapshot.Length) ? 1 : appData.lastActivated + 1
+    }
+    
     ActivateWindow(appData.windowSnapshot[appData.lastActivated])
 }
 
@@ -84,7 +101,6 @@ ActivateWindow(hwnd) {
         }
         Sleep(30)
         WinActivate("ahk_id " hwnd)
-        WinWaitActive("ahk_id " hwnd, , 0.15)
     }
 }
 
