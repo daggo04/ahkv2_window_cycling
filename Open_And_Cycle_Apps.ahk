@@ -63,7 +63,11 @@ LaunchOrCycle(processName, launchCommand, appKey) {
     currentTime := A_TickCount
     if (currentTime - appData.snapshotTime > 5000 || appData.windowSnapshot.Length = 0) {
         ; Build fresh window list
-        wins := WinGetList("ahk_exe " . processName)
+        if (processName = "explorer.exe") {
+            wins := WinGetList("ahk_class CabinetWClass")
+        } else {
+            wins := WinGetList("ahk_exe " . processName)
+        }
         appData.windowSnapshot := []
         
         ; Filter for valid windows
@@ -196,17 +200,32 @@ LaunchAndFocus(launchCommand, processName, appKey) {
 ; LAlt + 1: Windows Terminal
 LAlt & 1::LaunchOrCycle("WindowsTerminal.exe", "wt.exe", "terminal")
 
+; LAlt + 2: Visual Studio
+LAlt & 2::LaunchOrCycle("devenv.exe", "devenv.exe", "visualstudio")
+
 ; LAlt + 3: Vivaldi
 LAlt & 3::LaunchOrCycle("vivaldi.exe", "vivaldi.exe", "vivaldi")
 
-; LAlt + 5: Outlook
-LAlt & 5::LaunchOrCycle("OUTLOOK.EXE", "outlook.exe", "outlook")
-
-; LAlt + 6: Teams
-LAlt & 6::LaunchOrCycle("ms-teams.exe", "ms-teams.exe", "teams")
+; LAlt + 4: ChatGPT Desktop
+LAlt & 4::LaunchOrCycle("ChatGPT.exe", "ChatGPT.exe", "chatgpt")
 
 ; LAlt + 7: Obsidian
 LAlt & 7::LaunchOrCycle("Obsidian.exe", "obsidian://", "obsidian")
 
 ; LAlt + 8: ProtonMail
 LAlt & 8::LaunchOrCycle("Proton Mail.exe", "C:\Users\DagOleBergersenHimle\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Proton\Proton Mail.lnk", "protonmail")
+
+; Win + 1: File Explorer
+#1::LaunchOrCycle("explorer.exe", "explorer.exe", "explorer")
+
+; Win + 2: Microsoft Edge
+#2::LaunchOrCycle("msedge.exe", "msedge.exe", "edge")
+
+; Win + 3: Microsoft Outlook
+#3::LaunchOrCycle("OUTLOOK.EXE", "outlook.exe", "outlook")
+
+; Win + 4: Microsoft Teams
+#4::LaunchOrCycle("ms-teams.exe", "ms-teams.exe", "teams")
+
+; Win + 0: Task Manager
+#0::LaunchOrCycle("Taskmgr.exe", "taskmgr.exe", "taskmgr")
