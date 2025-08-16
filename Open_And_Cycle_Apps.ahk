@@ -1,5 +1,8 @@
 #Requires AutoHotkey v2.0
 
+; Global timer storage for launch operations
+g_activeTimers := Map()
+
 ; Helper function to check if window is cloaked by DWM
 IsCloaked(hwnd) {
     static DWMWA_CLOAKED := 14
@@ -24,10 +27,22 @@ IsRealWindow(hwnd) {
     }
 }
 
+; Cancel all pending launch timers (called when any hotkey is pressed)
+CancelAllLaunchTimers() {
+    global g_activeTimers
+    for appKey, timer in g_activeTimers.Clone() {
+        SetTimer(timer, 0)
+        g_activeTimers.Delete(appKey)
+    }
+}
+
 ; Generic function to launch or cycle through application windows
 LaunchOrCycle(processName, launchCommand, appKey) {
     ; Static variables for each app (using appKey to differentiate)
     static snapshots := Map()
+    
+    ; Cancel any pending launch timers when user presses new hotkey
+    CancelAllLaunchTimers()
     
     ; Initialize app snapshot if it doesn't exist
     if (!snapshots.Has(appKey)) {
@@ -96,6 +111,7 @@ LaunchOrCycle(processName, launchCommand, appKey) {
     ; If activation failed (window probably closed), prune and try next
     if (WinGetID("A") != target) {
         appData.windowSnapshot.RemoveAt(appData.lastActivated)
+        appData.snapshotTime := A_TickCount  ; Mark snapshot as fresh to prevent rebuild churn
         if (appData.windowSnapshot.Length > 0) {
             ; Adjust index if we removed the last item
             if (appData.lastActivated > appData.windowSnapshot.Length) {
@@ -118,35 +134,33 @@ ActivateWindow(hwnd) {
     }
     
     ; Help with foreground lock issues
-    DllCall("user32\AllowSetForegroundWindow", "uint", -1)
+    try DllCall("user32\AllowSetForegroundWindow", "uint", -1)
     WinActivate("ahk_id " hwnd)
 }
 
 ; Launch application and focus with timer-based polling
 LaunchAndFocus(launchCommand, processName, appKey) {
-    static activeTimers := Map()
+    global g_activeTimers
     
     ; Cancel existing timer for this app if any
-    if (activeTimers.Has(appKey)) {
-        SetTimer(activeTimers[appKey], 0)
-        activeTimers.Delete(appKey)
+    if (g_activeTimers.Has(appKey)) {
+        SetTimer(g_activeTimers[appKey], 0)
+        g_activeTimers.Delete(appKey)
     }
     
     ; Launch the application
     pid := Run(launchCommand)
     launchTime := A_TickCount
-    attempts := 0
     
     ; Create polling function
     PollForWindow() {
-        attempts++
         
         ; First try PID match
         for hwnd in WinGetList("ahk_pid " pid) {
             if (IsRealWindow(hwnd)) {
                 ActivateWindow(hwnd)
                 SetTimer(PollForWindow, 0)
-                activeTimers.Delete(appKey)
+                g_activeTimers.Delete(appKey)
                 return
             }
         }
@@ -157,7 +171,7 @@ LaunchAndFocus(launchCommand, processName, appKey) {
                 if (IsRealWindow(hwnd)) {
                     ActivateWindow(hwnd)
                     SetTimer(PollForWindow, 0)
-                    activeTimers.Delete(appKey)
+                    g_activeTimers.Delete(appKey)
                     return
                 }
             }
@@ -166,12 +180,12 @@ LaunchAndFocus(launchCommand, processName, appKey) {
         ; Timeout after 5 seconds
         if (A_TickCount - launchTime > 5000) {
             SetTimer(PollForWindow, 0)
-            activeTimers.Delete(appKey)
+            g_activeTimers.Delete(appKey)
         }
     }
     
     ; Store timer reference and start polling
-    activeTimers[appKey] := PollForWindow
+    g_activeTimers[appKey] := PollForWindow
     SetTimer(PollForWindow, 75)
 }
 
