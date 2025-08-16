@@ -1,9 +1,13 @@
 #Requires AutoHotkey v2.0
 
+; AutoHotkey v2 Window Cycling Script
+; Provides keyboard shortcuts for launching and cycling through application windows
+; with snapshot-based caching and smart focus management
+
 ; Global timer storage for launch operations
 g_activeTimers := Map()
 
-; Helper function to check if window is cloaked by DWM
+; Check if window is cloaked by DWM (hidden by Windows)
 IsCloaked(hwnd) {
     static DWMWA_CLOAKED := 14
     flag := 0
@@ -13,7 +17,7 @@ IsCloaked(hwnd) {
     return (ok = 0) && (flag != 0)
 }
 
-; Helper function to validate if window is real and interactable
+; Validate if window exists and is interactable
 IsRealWindow(hwnd) {
     try {
         if !WinExist("ahk_id " hwnd)
@@ -27,7 +31,7 @@ IsRealWindow(hwnd) {
     }
 }
 
-; Cancel all pending launch timers (called when any hotkey is pressed)
+; Cancel pending launch timers to prevent focus stealing
 CancelAllLaunchTimers() {
     global g_activeTimers
     for appKey, timer in g_activeTimers.Clone() {
@@ -36,15 +40,15 @@ CancelAllLaunchTimers() {
     }
 }
 
-; Generic function to launch or cycle through application windows
+; Main function to launch or cycle through application windows
 LaunchOrCycle(processName, launchCommand, appKey) {
-    ; Static variables for each app (using appKey to differentiate)
+    ; Per-app state storage
     static snapshots := Map()
     
-    ; Cancel any pending launch timers when user presses new hotkey
+    ; Cancel pending timers to prevent focus stealing
     CancelAllLaunchTimers()
     
-    ; Initialize app snapshot if it doesn't exist
+    ; Initialize app state if needed
     if (!snapshots.Has(appKey)) {
         snapshots[appKey] := {
             windowSnapshot: [],
@@ -55,14 +59,14 @@ LaunchOrCycle(processName, launchCommand, appKey) {
     
     appData := snapshots[appKey]
     
-    ; Check if snapshot is expired (5 seconds timeout)
+    ; Refresh window list if expired (5 second cache)
     currentTime := A_TickCount
     if (currentTime - appData.snapshotTime > 5000 || appData.windowSnapshot.Length = 0) {
-        ; Take new snapshot
+        ; Build fresh window list
         wins := WinGetList("ahk_exe " . processName)
         appData.windowSnapshot := []
         
-        ; Filter for real windows
+        ; Filter for valid windows
         for id in wins {
             if (IsRealWindow(id)) {
                 appData.windowSnapshot.Push(id)
@@ -70,26 +74,26 @@ LaunchOrCycle(processName, launchCommand, appKey) {
         }
         
         appData.snapshotTime := currentTime
-        appData.lastActivated := 0  ; Reset counter for new snapshot
+        appData.lastActivated := 0
     }
     
-    ; If no windows found, launch the application
+    ; Launch if no windows exist
     if (appData.windowSnapshot.Length = 0) {
         LaunchAndFocus(launchCommand, processName, appKey)
         return
     }
     
-    ; If only one window, just activate it
+    ; Single window - just activate
     if (appData.windowSnapshot.Length = 1) {
         ActivateWindow(appData.windowSnapshot[1])
         return
     }
     
-    ; Smart cycling: if current app is active, jump to next window
+    ; Smart cycling - skip currently active window
     activeWindow := WinGetID("A")
     currentIndex := 0
     
-    ; Find if active window is in our snapshot
+    ; Check if active window belongs to this app
     for i, hwnd in appData.windowSnapshot {
         if (hwnd = activeWindow) {
             currentIndex := i
@@ -97,23 +101,23 @@ LaunchOrCycle(processName, launchCommand, appKey) {
         }
     }
     
-    ; If active window is in snapshot, jump to next; otherwise use lastActivated
+    ; Jump to next if current app is active, otherwise cycle normally
     if (currentIndex > 0) {
         appData.lastActivated := (currentIndex >= appData.windowSnapshot.Length) ? 1 : currentIndex + 1
     } else {
         appData.lastActivated := (appData.lastActivated >= appData.windowSnapshot.Length) ? 1 : appData.lastActivated + 1
     }
     
-    ; Try to activate target window and handle dead handles
+    ; Activate target and handle closed windows
     target := appData.windowSnapshot[appData.lastActivated]
     ActivateWindow(target)
     
-    ; If activation failed (window probably closed), prune and try next
+    ; Clean up closed windows and retry
     if (WinGetID("A") != target) {
         appData.windowSnapshot.RemoveAt(appData.lastActivated)
-        appData.snapshotTime := A_TickCount  ; Mark snapshot as fresh to prevent rebuild churn
+        appData.snapshotTime := A_TickCount  ; Mark as fresh to prevent immediate rebuild
         if (appData.windowSnapshot.Length > 0) {
-            ; Adjust index if we removed the last item
+            ; Adjust index after removal
             if (appData.lastActivated > appData.windowSnapshot.Length) {
                 appData.lastActivated := 1
             }
@@ -122,40 +126,40 @@ LaunchOrCycle(processName, launchCommand, appKey) {
     }
 }
 
-; Helper function to activate window with validation
+; Activate window with proper restoration and focus handling
 ActivateWindow(hwnd) {
     if !WinExist("ahk_id " hwnd)
         return
     
-    ; Restore if minimized (only sleep after restore)
+    ; Restore minimized windows
     if (WinGetMinMax("ahk_id " hwnd) = -1) {
         WinRestore("ahk_id " hwnd)
         Sleep(20)
     }
     
-    ; Help with foreground lock issues
+    ; Handle Windows focus restrictions
     try DllCall("user32\AllowSetForegroundWindow", "uint", -1)
     WinActivate("ahk_id " hwnd)
 }
 
-; Launch application and focus with timer-based polling
+; Launch application with non-blocking focus polling
 LaunchAndFocus(launchCommand, processName, appKey) {
     global g_activeTimers
     
-    ; Cancel existing timer for this app if any
+    ; Clean up existing timer
     if (g_activeTimers.Has(appKey)) {
         SetTimer(g_activeTimers[appKey], 0)
         g_activeTimers.Delete(appKey)
     }
     
-    ; Launch the application
+    ; Start the application
     pid := Run(launchCommand)
     launchTime := A_TickCount
     
-    ; Create polling function
+    ; Poll for window appearance
     PollForWindow() {
         
-        ; First try PID match
+        ; Try exact PID match first
         for hwnd in WinGetList("ahk_pid " pid) {
             if (IsRealWindow(hwnd)) {
                 ActivateWindow(hwnd)
@@ -165,7 +169,7 @@ LaunchAndFocus(launchCommand, processName, appKey) {
             }
         }
         
-        ; After 400ms, fallback to process name match
+        ; Fallback to process name after 400ms
         if (A_TickCount - launchTime > 400) {
             for hwnd in WinGetList("ahk_exe " processName) {
                 if (IsRealWindow(hwnd)) {
@@ -177,14 +181,14 @@ LaunchAndFocus(launchCommand, processName, appKey) {
             }
         }
         
-        ; Timeout after 5 seconds
+        ; Stop polling after 5 seconds
         if (A_TickCount - launchTime > 5000) {
             SetTimer(PollForWindow, 0)
             g_activeTimers.Delete(appKey)
         }
     }
     
-    ; Store timer reference and start polling
+    ; Start polling timer
     g_activeTimers[appKey] := PollForWindow
     SetTimer(PollForWindow, 75)
 }
