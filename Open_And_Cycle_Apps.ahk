@@ -89,19 +89,37 @@ LaunchOrCycle(processName, launchCommand, appKey) {
         appData.lastActivated := (appData.lastActivated >= appData.windowSnapshot.Length) ? 1 : appData.lastActivated + 1
     }
     
-    ActivateWindow(appData.windowSnapshot[appData.lastActivated])
+    ; Try to activate target window and handle dead handles
+    target := appData.windowSnapshot[appData.lastActivated]
+    ActivateWindow(target)
+    
+    ; If activation failed (window probably closed), prune and try next
+    if (WinGetID("A") != target) {
+        appData.windowSnapshot.RemoveAt(appData.lastActivated)
+        if (appData.windowSnapshot.Length > 0) {
+            ; Adjust index if we removed the last item
+            if (appData.lastActivated > appData.windowSnapshot.Length) {
+                appData.lastActivated := 1
+            }
+            ActivateWindow(appData.windowSnapshot[appData.lastActivated])
+        }
+    }
 }
 
 ; Helper function to activate window with validation
 ActivateWindow(hwnd) {
-    if (IsRealWindow(hwnd)) {
-        ; Restore if minimized
-        if (WinGetMinMax("ahk_id " hwnd) = -1) {
-            WinRestore("ahk_id " hwnd)
-        }
-        Sleep(30)
-        WinActivate("ahk_id " hwnd)
+    if !WinExist("ahk_id " hwnd)
+        return
+    
+    ; Restore if minimized (only sleep after restore)
+    if (WinGetMinMax("ahk_id " hwnd) = -1) {
+        WinRestore("ahk_id " hwnd)
+        Sleep(20)
     }
+    
+    ; Help with foreground lock issues
+    DllCall("user32\AllowSetForegroundWindow", "uint", -1)
+    WinActivate("ahk_id " hwnd)
 }
 
 ; Launch application and focus with timer-based polling
