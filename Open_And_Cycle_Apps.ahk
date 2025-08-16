@@ -52,20 +52,20 @@ LaunchOrCycle(processName, launchCommand, appKey) {
     WinActivate("ahk_id " appData.windowSnapshot[appData.lastActivated])
 }
 
-; Alt + 1: Windows Terminal
-Alt & 1::LaunchOrCycle("WindowsTerminal.exe", "wt.exe", "terminal")
+; LAlt + 1: Windows Terminal
+LAlt & 1::LaunchOrCycle("WindowsTerminal.exe", "wt.exe", "terminal")
 
-; Alt + 3: Vivaldi
-Alt & 3::LaunchOrCycle("vivaldi.exe", "vivaldi.exe", "vivaldi")
+; LAlt + 3: Vivaldi
+LAlt & 3::LaunchOrCycle("vivaldi.exe", "vivaldi.exe", "vivaldi")
 
-; Alt + 5: Outlook
-Alt & 5::LaunchOrCycle("OUTLOOK.EXE", "outlook.exe", "outlook")
+; LAlt + 5: Outlook
+LAlt & 5::LaunchOrCycle("OUTLOOK.EXE", "outlook.exe", "outlook")
 
-; Alt + 6: Teams
-Alt & 6::LaunchOrCycle("ms-teams.exe", "ms-teams.exe", "teams")
+; LAlt + 6: Teams
+LAlt & 6::LaunchOrCycle("ms-teams.exe", "ms-teams.exe", "teams")
 
-; Alt + 7: Obsidian
-Alt & 7::LaunchOrCycle("Obsidian.exe", "obsidian://", "obsidian")
+; LAlt + 7: Obsidian
+LAlt & 7::LaunchOrCycle("Obsidian.exe", "obsidian://", "obsidian")
 
-; Alt + 8: ProtonMail
-Alt & 8::LaunchOrCycle("Proton Mail.exe", "C:\Users\DagOleBergersenHimle\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Proton\Proton Mail.lnk", "protonmail")
+; LAlt + 8: ProtonMail
+LAlt & 8::LaunchOrCycle("Proton Mail.exe", "C:\Users\DagOleBergersenHimle\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Proton\Proton Mail.lnk", "protonmail")
