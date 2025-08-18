@@ -197,23 +197,23 @@ LaunchAndFocus(launchCommand, processName, appKey) {
     SetTimer(PollForWindow, 75)
 }
 
-; LAlt + 1: Windows Terminal
-LAlt & 1::LaunchOrCycle("WindowsTerminal.exe", "wt.exe", "terminal")
+; Alt + 1: Windows Terminal
+!1::LaunchOrCycle("WindowsTerminal.exe", "wt.exe", "terminal")
 
-; LAlt + 2: Visual Studio
-LAlt & 2::LaunchOrCycle("devenv.exe", "devenv.exe", "visualstudio")
+; Alt + 2: Visual Studio
+!2::LaunchOrCycle("devenv.exe", "devenv.exe", "visualstudio")
 
-; LAlt + 3: Vivaldi
-LAlt & 3::LaunchOrCycle("vivaldi.exe", "vivaldi.exe", "vivaldi")
+; Alt + 3: Vivaldi
+!3::LaunchOrCycle("vivaldi.exe", "vivaldi.exe", "vivaldi")
 
-; LAlt + 4: ChatGPT Desktop
-LAlt & 4::LaunchOrCycle("ChatGPT.exe", "ChatGPT.exe", "chatgpt")
+; Alt + 4: ChatGPT Desktop
+!4::LaunchOrCycle("ChatGPT.exe", "ChatGPT.exe", "chatgpt")
 
-; LAlt + 7: Obsidian
-LAlt & 7::LaunchOrCycle("Obsidian.exe", "obsidian://", "obsidian")
+; Alt + 7: Obsidian
+!7::LaunchOrCycle("Obsidian.exe", "obsidian://", "obsidian")
 
-; LAlt + 8: ProtonMail
-LAlt & 8::LaunchOrCycle("Proton Mail.exe", "C:\Users\DagOleBergersenHimle\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Proton\Proton Mail.lnk", "protonmail")
+; Alt + 8: ProtonMail
+!8::LaunchOrCycle("Proton Mail.exe", "C:\Users\DagOleBergersenHimle\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Proton\Proton Mail.lnk", "protonmail")
 
 ; Win + 1: File Explorer
 #1::LaunchOrCycle("explorer.exe", "explorer.exe", "explorer")

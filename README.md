@@ -12,12 +12,17 @@ A fast and reliable AutoHotkey v2 script for launching and cycling through appli
 
 ## Default Hotkeys
 
-- **LAlt + 1** - Windows Terminal
-- **LAlt + 3** - Vivaldi Browser
-- **LAlt + 5** - Microsoft Outlook
-- **LAlt + 6** - Microsoft Teams
-- **LAlt + 7** - Obsidian
-- **LAlt + 8** - ProtonMail
+- **Alt + 1** - Windows Terminal
+- **Alt + 2** - Visual Studio
+- **Alt + 3** - Vivaldi Browser
+- **Alt + 4** - ChatGPT Desktop
+- **Alt + 7** - Obsidian
+- **Alt + 8** - ProtonMail
+- **Win + 1** - File Explorer
+- **Win + 2** - Microsoft Edge
+- **Win + 3** - Microsoft Outlook
+- **Win + 4** - Microsoft Teams
+- **Win + 0** - Task Manager
 
 ## How It Works
 
@@ -44,7 +49,7 @@ Parameters:
 - `launchCommand` - Command to launch the application  
 - `appKey` - Unique identifier for the application
 
-The hotkey can be any combination supported by AutoHotkey (e.g., `Ctrl & J`, `Win & 1`, `F1`, etc.).
+The hotkey can be any combination supported by AutoHotkey (e.g., `!1`, `#1`, `^j`, `F1`, etc.).
 
 ## Installation
 
@@ -55,7 +60,7 @@ The hotkey can be any combination supported by AutoHotkey (e.g., `Ctrl & J`, `Wi
 
 ## Technical Details
 
-- Default hotkeys use LAlt to avoid conflicts with AltGr symbol typing
+- Uses traditional Alt modifier syntax (!n::) for better application hotkey priority
 - Implements timer-based window polling for reliable launch focus
 - Filters out DWM-cloaked windows using Windows API calls
 - Maintains per-application state for efficient window management
